@@ -7,7 +7,6 @@ package controller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.Cookie;
@@ -20,59 +19,43 @@ import utils.MySessionHandler;
  *
  * @author aram
  */
-@WebServlet(name = "ServletSession", urlPatterns = {"/ServletSession"})
-public class ServletSession extends HttpServlet {
+@WebServlet(name = "SessionHandlerServlet", urlPatterns = {"/SessionHandlerServlet"})
+public class SessionHandlerServlet extends HttpServlet {
 
+    /**
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
+     * methods.
+     *
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         PrintWriter out = response.getWriter();
+        String name = (String) request.getParameter("name");
         try {
             MySessionHandler mySessionHandler = new MySessionHandler();
             String mySessionId = mySessionHandler.getSessionIdFromCookies(request);
-
             if(mySessionId == null){
-//                mySessionHandler.createNewSession();
-//
-//                Cookie sessionCookie = new Cookie("sessionId", mySessionHandler.getSessionID());
-//                response.addCookie(sessionCookie);
-//                
-//                // Afaka manampy data anaty session data 
-//                mySessionHandler.addSessionItem("name", "John Doe");
-//                mySessionHandler.writeSessionData();
-                
-                response.sendRedirect("login.jsp");
-            } else {
-                HashMap<String, Object> getSession = mySessionHandler.readSessionData();
-        
-//                out.println("At SERVEUR DANIA: ");
-//                out.println("Connected as "+getSession.get("name"));
-                request.setAttribute("session_handler", mySessionHandler.readSessionData());
-                request.getRequestDispatcher("home.jsp").forward(request, response);
-            }
+                mySessionHandler.createNewSession();
+                Cookie sessionCookie = new Cookie("sessionId", mySessionHandler.getSessionID());
+                sessionCookie.setMaxAge(30*60);
 
-          
+                response.addCookie(sessionCookie);
+                
+                mySessionHandler.addSessionItem("name", name);
+                mySessionHandler.writeSessionData();
+            }
             
+            request.setAttribute("session_handler", mySessionHandler.readSessionData());
+            request.getRequestDispatcher("home.jsp").forward(request, response);
+
         } catch (Exception e) {
-             out.println("Error with the following " + e);
         }
-        
-        
-        
-        
-        
-//        try (PrintWriter out = response.getWriter()) {
-//            /* TODO output your page here. You may use following sample code. */
-//            out.println("<!DOCTYPE html>");
-//            out.println("<html>");
-//            out.println("<head>");
-//            out.println("<title>Servlet ServletSession</title>");            
-//            out.println("</head>");
-//            out.println("<body>");
-//            out.println("<h1>Servlet ServletSession at " + request.getContextPath() + "</h1>");
-//            out.println("</body>");
-//            out.println("</html>");
-//        }
+         
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

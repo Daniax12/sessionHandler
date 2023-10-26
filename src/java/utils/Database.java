@@ -20,7 +20,7 @@ public class Database {
      public static Connection dbConnect() throws Exception{
         String user = "postgres";
         String mdp = "mdpProm15";
-        String nameDatabase = "session_handler";
+        String nameDatabase = "haproxy";
         Connection temp = null;
         try {      
 

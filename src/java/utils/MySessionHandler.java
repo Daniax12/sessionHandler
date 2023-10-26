@@ -14,8 +14,8 @@ import java.util.HashMap;
 
 import java.lang.reflect.Type;
 import com.google.gson.reflect.TypeToken;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  *
@@ -23,6 +23,84 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class MySessionHandler {
     private String sessionID;
+    private HashMap<String, Object> sessionData;
+    
+     /*
+    DECONNECTION OF THE SESSION
+    */
+    public void destroy() throws Exception{
+        if(this.getSessionID() != null){
+            Connection connection = null;
+            PreparedStatement preparedStatement = null;
+
+            try {
+                // Create a database connection
+                connection = Database.dbConnect();
+
+                // Define the SQL query for inserting data into the 'sessions' table
+                String sql = "delete from sessions where id = ?";
+                // Create a prepared statement with the SQL query
+                preparedStatement = connection.prepareStatement(sql);
+                 preparedStatement.setString(1, this.getSessionID());
+                // Execute the query to insert data
+                preparedStatement.executeUpdate();
+                connection.commit();
+            } catch (SQLException e) {
+                // Handle database connection and query errors
+                e.printStackTrace();
+            } finally {
+                // Close the resources
+                try {
+                    if (preparedStatement != null) preparedStatement.close();
+                    if (connection != null) connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    
+    
+    /*
+    DELETE ALL COOKIES AFTER 30 MIN
+    */
+    public static void cleanSessions() throws Exception{
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+
+        try {
+            // Create a database connection
+            connection = Database.dbConnect();
+
+            // Define the SQL query for inserting data into the 'sessions' table
+            String sql = "delete from sessions where datesessions < now() - interval '30 minutes'";
+
+            // Create a prepared statement with the SQL query
+            preparedStatement = connection.prepareStatement(sql);
+            // Execute the query to insert data
+            preparedStatement.executeUpdate();
+            connection.commit();
+        } catch (SQLException e) {
+            // Handle database connection and query errors
+            e.printStackTrace();
+        } finally {
+            // Close the resources
+            try {
+                if (preparedStatement != null) preparedStatement.close();
+                if (connection != null) connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    /*
+    Add Item session
+    */
+    public void addSessionItem(String key, Object value){
+        if(this.getSessionData() == null) this.setSessionData(new HashMap<String, Object>());
+        this.getSessionData().put(key, value);
+    }
     
      /*
      * Get the SessionData
@@ -74,7 +152,7 @@ public class MySessionHandler {
      /*
      * STORING THE SESSIONID & SESSION DATA in DATABASE
      */
-    public void writeSessionData(HashMap<String, Object> sessionData) throws Exception{ 
+    public void writeSessionData() throws Exception{ 
         if(this.getSessionID() != null){
             Connection connection = null;
             PreparedStatement preparedStatement = null;
@@ -86,10 +164,10 @@ public class MySessionHandler {
                 Gson gson = new Gson();
 
             // Convert the HashMap to JSON
-                String json = gson.toJson(sessionData);
+                String json = gson.toJson(this.getSessionData());
 
                 // Define the SQL query for inserting data into the 'sessions' table
-                String sql = "INSERT INTO sessions (id, access, data) VALUES (?, ?, ?) ON CONFLICT (id) DO UPDATE SET access = EXCLUDED.access, data = EXCLUDED.data";
+                String sql = "INSERT INTO sessions (id, access, data, dateSessions) VALUES (?, ?, ?, NOW()) ON CONFLICT (id) DO UPDATE SET access = EXCLUDED.access, data = EXCLUDED.data";
 
                 // Create a prepared statement with the SQL query
                 preparedStatement = connection.prepareStatement(sql);
@@ -145,7 +223,13 @@ public class MySessionHandler {
     }
     
     // Constructiors
-    public MySessionHandler(){}
+    public MySessionHandler() throws Exception{
+        try {
+            cleanSessions();
+        } catch (Exception e) {
+            throw new Exception("Error on constructing the SessionHAndler and cleaning session data");
+        }
+    }
 
     public MySessionHandler(String sessionID) {
         this.setSessionID(sessionID);
@@ -159,6 +243,16 @@ public class MySessionHandler {
     public void setSessionID(String sessionID) {
         this.sessionID = sessionID;
     }
+
+    public HashMap<String, Object> getSessionData() {
+        return sessionData;
+    }
+
+    public void setSessionData(HashMap<String, Object> sessionData) {
+        this.sessionData = sessionData;
+    }
+    
+    
 
 
 }

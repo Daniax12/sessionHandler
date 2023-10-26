@@ -1,13 +1,11 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
 package controller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.Cookie;
@@ -18,61 +16,40 @@ import utils.MySessionHandler;
 
 /**
  *
- * @author aram
+ * @author rango
  */
-@WebServlet(name = "ServletSession", urlPatterns = {"/ServletSession"})
-public class ServletSession extends HttpServlet {
+@WebServlet(name = "DeconnexionServlet", urlPatterns = {"/DeconnexionServlet"})
+public class DeconnexionServlet extends HttpServlet {
 
+    /**
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
+     * methods.
+     *
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        PrintWriter out = response.getWriter();
+        response.setContentType("text/html;charset=UTF-8");
         try {
             MySessionHandler mySessionHandler = new MySessionHandler();
             String mySessionId = mySessionHandler.getSessionIdFromCookies(request);
-
+            
             if(mySessionId == null){
-//                mySessionHandler.createNewSession();
-//
-//                Cookie sessionCookie = new Cookie("sessionId", mySessionHandler.getSessionID());
-//                response.addCookie(sessionCookie);
-//                
-//                // Afaka manampy data anaty session data 
-//                mySessionHandler.addSessionItem("name", "John Doe");
-//                mySessionHandler.writeSessionData();
-                
                 response.sendRedirect("login.jsp");
             } else {
-                HashMap<String, Object> getSession = mySessionHandler.readSessionData();
-        
-//                out.println("At SERVEUR DANIA: ");
-//                out.println("Connected as "+getSession.get("name"));
-                request.setAttribute("session_handler", mySessionHandler.readSessionData());
-                request.getRequestDispatcher("home.jsp").forward(request, response);
+                mySessionHandler.destroy();
+                Cookie sessionCookie = new Cookie("sessionId", "");
+                sessionCookie.setMaxAge(0);
+                response.addCookie(sessionCookie);
+                response.sendRedirect("login.jsp");
             }
-
-          
-            
         } catch (Exception e) {
-             out.println("Error with the following " + e);
+            e.getLocalizedMessage();
         }
-        
-        
-        
-        
-        
-//        try (PrintWriter out = response.getWriter()) {
-//            /* TODO output your page here. You may use following sample code. */
-//            out.println("<!DOCTYPE html>");
-//            out.println("<html>");
-//            out.println("<head>");
-//            out.println("<title>Servlet ServletSession</title>");            
-//            out.println("</head>");
-//            out.println("<body>");
-//            out.println("<h1>Servlet ServletSession at " + request.getContextPath() + "</h1>");
-//            out.println("</body>");
-//            out.println("</html>");
-//        }
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
